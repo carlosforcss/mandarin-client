@@ -4,6 +4,7 @@ import HanziList from './pages/HanziList'
 import HanziDetail from './pages/HanziDetail'
 import Categories from './pages/Categories'
 import Pinyin from './pages/Pinyin'
+import PlayPinyin from './pages/PlayPinyin'
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/hanzi/:id" element={<HanziDetail />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/pinyin" element={<Pinyin />} />
+          <Route path="/play-pinyin" element={<PlayPinyin />} />
         </Routes>
       </main>
     </div>

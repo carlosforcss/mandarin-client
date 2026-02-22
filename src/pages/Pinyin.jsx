@@ -1,54 +1,6 @@
 import { useState, useRef } from 'react'
-
-const INITIALS = ['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w']
-
-const FINALS = [
-  'a', 'o', 'e', 'i', 'u', 'ü',
-  'ai', 'ei', 'ao', 'ou',
-  'ia', 'ie', 'iao', 'iu',
-  'ua', 'uo', 'uai', 'ui',
-  'üe',
-  'an', 'en', 'ang', 'eng', 'ong',
-  'ian', 'in', 'iang', 'ing', 'iong',
-  'uan', 'un', 'uang',
-  'üan', 'ün',
-]
-
-const TONES = [
-  { num: 1, label: 'ā' },
-  { num: 2, label: 'á' },
-  { num: 3, label: 'ǎ' },
-  { num: 4, label: 'à' },
-]
-
-// Finals use display names (ü, üe, üan, ün).
-// j/q/x/y: u→ü, ue→üe, uan→üan, un→ün in source data.
-// n/l: uu→ü, uue→üe, uun→ün in source data.
-const VALID_FINALS = {
-  b:  ['a', 'ai', 'an', 'ang', 'ao', 'ei', 'en', 'eng', 'i', 'ian', 'iao', 'ie', 'in', 'ing', 'o', 'u'],
-  p:  ['a', 'ai', 'an', 'ang', 'ao', 'ei', 'en', 'eng', 'i', 'ian', 'iao', 'ie', 'in', 'ing', 'o', 'ou', 'u'],
-  m:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ian', 'iao', 'ie', 'in', 'ing', 'iu', 'o', 'ou', 'u', 'uo'],
-  f:  ['a', 'an', 'ang', 'ei', 'en', 'eng', 'o', 'ou', 'u'],
-  d:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ian', 'iang', 'iao', 'ie', 'ing', 'iu', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
-  t:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'eng', 'i', 'ian', 'iao', 'ie', 'ing', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
-  n:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iu', 'ong', 'ou', 'u', 'uan', 'ü', 'üe'],
-  l:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'eng', 'i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iu', 'o', 'ong', 'ou', 'u', 'uan', 'un', 'uo', 'ü', 'üe', 'ün'],
-  g:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
-  k:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'en', 'eng', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
-  h:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
-  j:  ['i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iong', 'iu', 'ü', 'üan', 'üe', 'ün'],
-  q:  ['i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iong', 'iu', 'ü', 'üan', 'üe', 'ün'],
-  x:  ['i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iong', 'iu', 'ü', 'üan', 'üe', 'ün'],
-  zh: ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
-  ch: ['a', 'ai', 'an', 'ang', 'ao', 'e', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
-  sh: ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
-  r:  ['an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
-  z:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
-  c:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
-  s:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
-  y:  ['a', 'an', 'ang', 'ao', 'e', 'i', 'in', 'ing', 'ong', 'ou', 'ü', 'üan', 'üe', 'ün'],
-  w:  ['a', 'ai', 'an', 'ang', 'ei', 'en', 'eng', 'o', 'u'],
-}
+import { Link } from 'react-router-dom'
+import { INITIALS, FINALS, TONES, VALID_FINALS, toAudioFinal } from '../lib/pinyin'
 
 function PinyinSquare({ syllable, selected, disabled, onClick }) {
   if (disabled) {
@@ -81,7 +33,8 @@ function Pinyin() {
 
   function playAudio(initial, final, tone) {
     if (audioRef.current) audioRef.current.pause()
-    audioRef.current = new Audio(`/pinyin/${initial}${final}${tone}.mp3`)
+    const audioFinal = toAudioFinal(initial, final)
+    audioRef.current = new Audio(`/pinyin/${initial}${audioFinal}${tone}.mp3`)
     audioRef.current.play().catch(() => {})
   }
 
@@ -103,7 +56,6 @@ function Pinyin() {
 
       {/* Selection bar */}
       <div className="flex items-end gap-2 sm:gap-4 pb-3 border-b border-gray-200">
-        {/* Initial */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Initial</span>
           <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-50 border-2 border-blue-300 rounded-lg text-sm sm:text-base font-bold text-blue-800 shadow-sm">
@@ -111,7 +63,6 @@ function Pinyin() {
           </div>
         </div>
 
-        {/* Final */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Final</span>
           <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-50 border-2 border-blue-300 rounded-lg text-sm sm:text-base font-bold text-blue-800 shadow-sm">
@@ -121,10 +72,9 @@ function Pinyin() {
 
         <div className="self-stretch w-px bg-gray-200 mx-1" />
 
-        {/* Tones */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Tone</span>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5 sm:gap-2">
             {TONES.map(({ num, label }) => (
               <button
                 key={num}
@@ -178,6 +128,16 @@ function Pinyin() {
           ))}
         </div>
       </section>
+
+      {/* Let's Play */}
+      <div className="pt-4 flex justify-center">
+        <Link
+          to="/play-pinyin"
+          className="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-lg transition-colors shadow"
+        >
+          Let's Play 🎮
+        </Link>
+      </div>
 
     </div>
   )
