@@ -53,7 +53,7 @@ const VALID_FINALS = {
 function PinyinSquare({ syllable, selected, disabled, onClick }) {
   if (disabled) {
     return (
-      <div className="flex items-center justify-center border-2 rounded-xl text-sm sm:text-base md:text-lg font-bold aspect-square w-full opacity-25 bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed select-none">
+      <div className="flex items-center justify-center border rounded-md text-xs sm:text-sm md:text-base font-semibold aspect-square w-full opacity-25 bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed select-none">
         {syllable}
       </div>
     )
@@ -62,7 +62,7 @@ function PinyinSquare({ syllable, selected, disabled, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center justify-center border-2 rounded-xl text-sm sm:text-base md:text-lg font-bold transition-colors cursor-pointer shadow-sm aspect-square w-full
+      className={`flex items-center justify-center border rounded-md text-xs sm:text-sm md:text-base font-semibold transition-colors cursor-pointer aspect-square w-full
         ${selected
           ? 'bg-blue-600 text-white border-blue-600'
           : 'bg-white text-blue-800 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600'
@@ -106,7 +106,7 @@ function Pinyin() {
         {/* Initial */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Initial</span>
-          <div className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-blue-50 border-2 border-blue-300 rounded-xl text-base sm:text-xl font-bold text-blue-800 shadow-sm">
+          <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-50 border-2 border-blue-300 rounded-lg text-sm sm:text-base font-bold text-blue-800 shadow-sm">
             {selectedInitial}
           </div>
         </div>
@@ -114,7 +114,7 @@ function Pinyin() {
         {/* Final */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Final</span>
-          <div className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-blue-50 border-2 border-blue-300 rounded-xl text-base sm:text-xl font-bold text-blue-800 shadow-sm">
+          <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 bg-blue-50 border-2 border-blue-300 rounded-lg text-sm sm:text-base font-bold text-blue-800 shadow-sm">
             {selectedFinal}
           </div>
         </div>
@@ -124,12 +124,12 @@ function Pinyin() {
         {/* Tones */}
         <div className="flex flex-col items-center gap-1">
           <span className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest">Tone</span>
-          <div className="flex gap-1.5 sm:gap-2">
+          <div className="flex gap-1">
             {TONES.map(({ num, label }) => (
               <button
                 key={num}
                 onClick={() => { setSelectedTone(num); playAudio(selectedInitial, selectedFinal, num) }}
-                className={`flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 border-2 rounded-xl text-base sm:text-lg md:text-xl font-bold transition-colors shadow-sm
+                className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 border-2 rounded-lg text-sm sm:text-base font-bold transition-colors shadow-sm
                   ${selectedTone === num
                     ? 'bg-blue-600 text-white border-blue-600'
                     : 'bg-white text-blue-800 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600'
@@ -140,7 +140,7 @@ function Pinyin() {
             ))}
             <button
               onClick={() => playAudio(selectedInitial, selectedFinal, selectedTone)}
-              className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 border-2 rounded-xl text-base sm:text-lg md:text-xl font-bold transition-colors shadow-sm bg-white text-blue-800 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+              className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 border-2 rounded-lg text-sm sm:text-base font-bold transition-colors shadow-sm bg-white text-blue-800 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600"
             >
               ▶
             </button>
@@ -151,7 +151,7 @@ function Pinyin() {
       {/* Initials grid */}
       <section>
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Initials</h2>
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 lg:grid-cols-[16] gap-1">
           {INITIALS.map((s) => (
             <PinyinSquare
               key={s}
@@ -166,7 +166,7 @@ function Pinyin() {
       {/* Finals grid */}
       <section>
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Finals</h2>
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-1.5 sm:gap-2">
+        <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 lg:grid-cols-[16] gap-1">
           {FINALS.map((s) => (
             <PinyinSquare
               key={s}
