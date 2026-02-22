@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://mandarinapi.carlostoolkit.com
     ports:
       - "3200:3200"
     restart: unless-stopped
