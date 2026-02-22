@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { INITIALS, TONES, VALID_FINALS, toAudioFinal, randomPinyin } from '../lib/pinyin'
+import { scoresAPI } from '../lib/api'
+import ScoreModal from '../components/ScoreModal'
+
+const GAME_SLUG = 'pinyin-mania-60-seconds'
 
 function GameSquare({ label, onClick }) {
   return (
@@ -15,6 +19,7 @@ function GameSquare({ label, onClick }) {
 
 export default function PlayPinyin() {
   const [phase, setPhase] = useState('name-entry') // 'name-entry' | 'playing' | 'game-over'
+  const [showScores, setShowScores] = useState(false)
   const [name, setName] = useState('')
   const [score, setScore] = useState(0)
   const [timeLeft, setTimeLeft] = useState(30)
@@ -26,6 +31,7 @@ export default function PlayPinyin() {
   const audioRef = useRef(null)
   const gameOverRef = useRef(false)
   const feedbackTimeoutRef = useRef(null)
+  const scoreRef = useRef(0)
 
   function playPinyinAudio(pinyin) {
     const audioFinal = toAudioFinal(pinyin.initial, pinyin.final)
@@ -43,8 +49,10 @@ export default function PlayPinyin() {
 
   function startGame() {
     gameOverRef.current = false
+    scoreRef.current = 0
+    setShowScores(false)
     setScore(0)
-    setTimeLeft(30)
+    setTimeLeft(60)
     setPhase('playing')
     startRound(randomPinyin())
   }
@@ -57,6 +65,8 @@ export default function PlayPinyin() {
         if (t <= 1) {
           clearInterval(id)
           gameOverRef.current = true
+          scoresAPI.submit(GAME_SLUG, name, scoreRef.current)
+            .finally(() => setShowScores(true))
           setPhase('game-over')
           return 0
         }
@@ -98,8 +108,12 @@ export default function PlayPinyin() {
       tone === answer.tone
 
     const delta = correct ? 5 : -2
-    setScore(s => Math.max(0, s + delta))
-    setFeedback({ correct, delta })
+    setScore(s => {
+      const next = Math.max(0, s + delta)
+      scoreRef.current = next
+      return next
+    })
+    setFeedback({ correct, delta, answer })
 
     feedbackTimeoutRef.current = setTimeout(() => {
       setFeedback(null)
@@ -141,6 +155,7 @@ export default function PlayPinyin() {
   // ── Game over ─────────────────────────────────────────────────────────────────
   if (phase === 'game-over') {
     return (
+      <>
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm text-center space-y-6">
           <div className="text-5xl">🎉</div>
@@ -164,8 +179,16 @@ export default function PlayPinyin() {
               Back
             </Link>
           </div>
+          <button
+            onClick={() => setShowScores(true)}
+            className="w-full py-2 text-sm font-semibold text-gray-400 hover:text-blue-600 transition-colors"
+          >
+            🏆 View Scores
+          </button>
         </div>
       </div>
+      {showScores && <ScoreModal gameSlug={GAME_SLUG} onClose={() => setShowScores(false)} />}
+      </>
     )
   }
 
@@ -205,13 +228,23 @@ export default function PlayPinyin() {
 
         {/* Feedback overlay */}
         {feedback && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 rounded-xl">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 rounded-xl gap-1">
             <div className={`text-6xl font-bold ${feedback.correct ? 'text-green-500' : 'text-red-500'}`}>
               {feedback.correct ? '✓' : '✗'}
             </div>
-            <div className={`text-2xl font-bold mt-1 ${feedback.correct ? 'text-green-500' : 'text-red-500'}`}>
+            <div className={`text-2xl font-bold ${feedback.correct ? 'text-green-500' : 'text-red-500'}`}>
               {feedback.delta > 0 ? '+5' : '-2'}
             </div>
+            {!feedback.correct && (
+              <div className="mt-2 text-center">
+                <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Correct answer</p>
+                <p className="text-2xl font-bold text-gray-700">
+                  {feedback.answer.initial}
+                  <span className="text-blue-600">{feedback.answer.final}</span>
+                  <span className="text-purple-500"> {TONES.find(t => t.num === feedback.answer.tone)?.label}</span>
+                </p>
+              </div>
+            )}
           </div>
         )}
 

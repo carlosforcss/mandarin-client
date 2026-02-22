@@ -12,7 +12,7 @@ function App() {
       <Nav />
       <main className="container mx-auto px-4 py-4">
         <Routes>
-          <Route path="/" element={<HanziList />} />
+          <Route path="/" element={<Pinyin />} />
           <Route path="/hanzi" element={<HanziList />} />
           <Route path="/hanzi/:id" element={<HanziDetail />} />
           <Route path="/categories" element={<Categories />} />

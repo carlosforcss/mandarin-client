@@ -1,6 +1,9 @@
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { INITIALS, FINALS, TONES, VALID_FINALS, toAudioFinal } from '../lib/pinyin'
+import ScoreModal from '../components/ScoreModal'
+
+const GAME_SLUG = 'pinyin-mania-60-seconds'
 
 function PinyinSquare({ syllable, selected, disabled, onClick }) {
   if (disabled) {
@@ -26,6 +29,7 @@ function PinyinSquare({ syllable, selected, disabled, onClick }) {
 }
 
 function Pinyin() {
+  const [showScores, setShowScores] = useState(false)
   const [selectedInitial, setSelectedInitial] = useState(INITIALS[0])
   const [selectedFinal, setSelectedFinal] = useState(FINALS[0])
   const [selectedTone, setSelectedTone] = useState(1)
@@ -53,6 +57,22 @@ function Pinyin() {
 
   return (
     <div className="py-2 space-y-4 mx-[5%] sm:mx-[8%] md:mx-[10%]">
+
+      {/* Buttons row — mobile only, above the bar */}
+      <div className="flex justify-end gap-2 sm:hidden">
+        <button
+          onClick={() => setShowScores(true)}
+          className="px-4 py-2 border-2 border-blue-200 text-blue-700 font-bold rounded-lg text-sm transition-colors hover:bg-blue-50"
+        >
+          🏆 Scores
+        </button>
+        <Link
+          to="/play-pinyin"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-sm transition-colors shadow"
+        >
+          Let's Play 🎮
+        </Link>
+      </div>
 
       {/* Selection bar */}
       <div className="flex items-end gap-2 sm:gap-4 pb-3 border-b border-gray-200">
@@ -96,6 +116,21 @@ function Pinyin() {
             </button>
           </div>
         </div>
+
+        <div className="hidden sm:flex ml-auto self-center gap-2">
+          <button
+            onClick={() => setShowScores(true)}
+            className="px-4 py-2 border-2 border-blue-200 text-blue-700 font-bold rounded-lg text-sm transition-colors hover:bg-blue-50"
+          >
+            🏆 Scores
+          </button>
+          <Link
+            to="/play-pinyin"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg text-sm transition-colors shadow"
+          >
+            Let's Play 🎮
+          </Link>
+        </div>
       </div>
 
       {/* Initials grid */}
@@ -129,16 +164,7 @@ function Pinyin() {
         </div>
       </section>
 
-      {/* Let's Play */}
-      <div className="pt-4 flex justify-center">
-        <Link
-          to="/play-pinyin"
-          className="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-lg transition-colors shadow"
-        >
-          Let's Play 🎮
-        </Link>
-      </div>
-
+      {showScores && <ScoreModal gameSlug={GAME_SLUG} onClose={() => setShowScores(false)} />}
     </div>
   )
 }

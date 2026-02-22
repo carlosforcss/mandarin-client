@@ -52,4 +52,10 @@ export const filesAPI = {
   delete: (id) => api.delete(`/api/files/${id}`),
 }
 
+// Scores / leaderboard endpoints
+export const scoresAPI = {
+  submit: (game_slug, player, score) => api.post('/api/scores/', { game_slug, player, score }),
+  getLeaderboard: (game_slug) => api.get(`/api/scores/${game_slug}`),
+}
+
 export default api
