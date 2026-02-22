@@ -22,17 +22,9 @@ export const hanziAPI = {
   create: (data) => api.post('/api/hanzi/', data),
   update: (id, data) => api.put(`/api/hanzi/${id}`, data),
   delete: (id) => api.delete(`/api/hanzi/${id}`),
+  getSpeech: (id) => api.get(`/api/hanzi/${id}/speech`, { responseType: 'blob' }),
 }
 
-// Sentences endpoints
-export const sentencesAPI = {
-  getAll: (skip = 0, limit = 100) => api.get(`/api/sentences/?skip=${skip}&limit=${limit}`),
-  getById: (id) => api.get(`/api/sentences/${id}`),
-  getByCategory: (category_id, skip = 0, limit = 100) => api.get(`/api/sentences/category/${category_id}?skip=${skip}&limit=${limit}`),
-  create: (data) => api.post('/api/sentences/', data),
-  update: (id, data) => api.put(`/api/sentences/${id}`, data),
-  delete: (id) => api.delete(`/api/sentences/${id}`),
-}
 
 // Categories endpoints
 export const categoriesAPI = {

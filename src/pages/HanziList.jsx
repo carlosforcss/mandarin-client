@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useHanzis, useHanzisByHSK, useHanzisByCategory, useDeleteHanzi } from '../lib/hooks'
+import { useHanzis, useHanzisByHSK, useHanzisByCategory, useHanziSpeech } from '../lib/hooks'
 import Filters from '../components/Filters'
 import Pager from '../components/Pager'
 import HanziForm from '../components/HanziForm'
@@ -12,7 +12,7 @@ function HanziList() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showForm, setShowForm] = useState(false)
   
-  const limit = 20
+  const limit = 50
 
   // Choose the appropriate query based on filters
   let query
@@ -25,7 +25,7 @@ function HanziList() {
   }
 
   const { data: hanzis = [], isLoading, error } = query
-  const deleteHanzi = useDeleteHanzi()
+  const hanziSpeech = useHanziSpeech()
 
   // Filter by search term locally
   const filteredHanzis = searchTerm
@@ -36,10 +36,8 @@ function HanziList() {
       )
     : hanzis
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this hanzi?')) {
-      deleteHanzi.mutate(id)
-    }
+  const handleListen = async (id) => {
+    hanziSpeech.mutate(id)
   }
 
   const handleFormSubmit = () => {
@@ -76,16 +74,6 @@ function HanziList() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Hanzis</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-        >
-          Add New Hanzi
-        </button>
-      </div>
-
       <Filters
         hsKLevel={hsKLevel}
         onHskChange={setHsKLevel}
@@ -101,7 +89,7 @@ function HanziList() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredHanzis.map((hanzi) => (
               <div key={hanzi.id} className="bg-white rounded-lg shadow p-6">
                 <div className="text-center mb-4">
@@ -131,11 +119,11 @@ function HanziList() {
                     View Details
                   </Link>
                   <button
-                    onClick={() => handleDelete(hanzi.id)}
-                    disabled={deleteHanzi.isPending}
-                    className="bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200 text-sm disabled:opacity-50"
+                    onClick={() => handleListen(hanzi.id)}
+                    disabled={hanziSpeech.isPending}
+                    className="bg-green-100 text-green-700 px-3 py-1 rounded-md hover:bg-green-200 text-sm disabled:opacity-50"
                   >
-                    {deleteHanzi.isPending ? 'Deleting...' : 'Delete'}
+                    {hanziSpeech.isPending ? 'Loading...' : 'Listen'}
                   </button>
                 </div>
               </div>

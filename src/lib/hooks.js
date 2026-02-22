@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { hanziAPI, sentencesAPI, categoriesAPI, filesAPI } from './api'
+import { hanziAPI, categoriesAPI, filesAPI } from './api'
 
 // Hanzi hooks
 export const useHanzis = (skip = 0, limit = 100) => {
@@ -68,63 +68,19 @@ export const useDeleteHanzi = () => {
   })
 }
 
-// Sentences hooks
-export const useSentences = (skip = 0, limit = 100) => {
-  return useQuery({
-    queryKey: ['sentences', skip, limit],
-    queryFn: () => sentencesAPI.getAll(skip, limit),
-    select: (response) => response.data,
-  })
-}
-
-export const useSentence = (id) => {
-  return useQuery({
-    queryKey: ['sentence', id],
-    queryFn: () => sentencesAPI.getById(id),
-    select: (response) => response.data,
-    enabled: !!id,
-  })
-}
-
-export const useSentencesByCategory = (category_id, skip = 0, limit = 100) => {
-  return useQuery({
-    queryKey: ['sentences', 'category', category_id, skip, limit],
-    queryFn: () => sentencesAPI.getByCategory(category_id, skip, limit),
-    select: (response) => response.data,
-    enabled: !!category_id,
-  })
-}
-
-export const useCreateSentence = () => {
-  const queryClient = useQueryClient()
+export const useHanziSpeech = () => {
   return useMutation({
-    mutationFn: sentencesAPI.create,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sentences'] })
+    mutationFn: async (id) => {
+      const response = await hanziAPI.getSpeech(id)
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' })
+      const audioUrl = URL.createObjectURL(audioBlob)
+      const audio = new Audio(audioUrl)
+      audio.play()
+      return audioUrl
     },
   })
 }
 
-export const useUpdateSentence = () => {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ id, data }) => sentencesAPI.update(id, data),
-    onSuccess: (data, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['sentence', id] })
-      queryClient.invalidateQueries({ queryKey: ['sentences'] })
-    },
-  })
-}
-
-export const useDeleteSentence = () => {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: sentencesAPI.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sentences'] })
-    },
-  })
-}
 
 // Categories hooks
 export const useCategories = (skip = 0, limit = 100) => {

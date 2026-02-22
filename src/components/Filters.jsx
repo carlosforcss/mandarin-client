@@ -13,7 +13,7 @@ function Filters({
   const hskLevels = [1, 2, 3, 4, 5, 6]
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow mb-6">
+    <div className="bg-white p-4 rounded-lg shadow mb-3">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
