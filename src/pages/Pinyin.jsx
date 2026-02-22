@@ -1,13 +1,17 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 const INITIALS = ['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'zh', 'ch', 'sh', 'r', 'z', 'c', 's', 'y', 'w']
 
 const FINALS = [
   'a', 'o', 'e', 'i', 'u', 'ü',
-  'ai', 'ei', 'ui', 'ao', 'ou', 'iu',
-  'ie', 'üe', 'er',
-  'an', 'en', 'in', 'un', 'ün',
-  'ang', 'eng', 'ing', 'ong',
+  'ai', 'ei', 'ao', 'ou',
+  'ia', 'ie', 'iao', 'iu',
+  'ua', 'uo', 'uai', 'ui',
+  'üe',
+  'an', 'en', 'ang', 'eng', 'ong',
+  'ian', 'in', 'iang', 'ing', 'iong',
+  'uan', 'un', 'uang',
+  'üan', 'ün',
 ]
 
 const TONES = [
@@ -17,7 +21,44 @@ const TONES = [
   { num: 4, label: 'à' },
 ]
 
-function PinyinSquare({ syllable, selected, onClick }) {
+// Finals use display names (ü, üe, üan, ün).
+// j/q/x/y: u→ü, ue→üe, uan→üan, un→ün in source data.
+// n/l: uu→ü, uue→üe, uun→ün in source data.
+const VALID_FINALS = {
+  b:  ['a', 'ai', 'an', 'ang', 'ao', 'ei', 'en', 'eng', 'i', 'ian', 'iao', 'ie', 'in', 'ing', 'o', 'u'],
+  p:  ['a', 'ai', 'an', 'ang', 'ao', 'ei', 'en', 'eng', 'i', 'ian', 'iao', 'ie', 'in', 'ing', 'o', 'ou', 'u'],
+  m:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ian', 'iao', 'ie', 'in', 'ing', 'iu', 'o', 'ou', 'u', 'uo'],
+  f:  ['a', 'an', 'ang', 'ei', 'en', 'eng', 'o', 'ou', 'u'],
+  d:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ian', 'iang', 'iao', 'ie', 'ing', 'iu', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
+  t:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'eng', 'i', 'ian', 'iao', 'ie', 'ing', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
+  n:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iu', 'ong', 'ou', 'u', 'uan', 'ü', 'üe'],
+  l:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'eng', 'i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iu', 'o', 'ong', 'ou', 'u', 'uan', 'un', 'uo', 'ü', 'üe', 'ün'],
+  g:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
+  k:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'en', 'eng', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
+  h:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
+  j:  ['i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iong', 'iu', 'ü', 'üan', 'üe', 'ün'],
+  q:  ['i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iong', 'iu', 'ü', 'üan', 'üe', 'ün'],
+  x:  ['i', 'ia', 'ian', 'iang', 'iao', 'ie', 'in', 'ing', 'iong', 'iu', 'ü', 'üan', 'üe', 'ün'],
+  zh: ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
+  ch: ['a', 'ai', 'an', 'ang', 'ao', 'e', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
+  sh: ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'ua', 'uai', 'uan', 'uang', 'ui', 'un', 'uo'],
+  r:  ['an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
+  z:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
+  c:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
+  s:  ['a', 'ai', 'an', 'ang', 'ao', 'e', 'ei', 'en', 'eng', 'i', 'ong', 'ou', 'u', 'uan', 'ui', 'un', 'uo'],
+  y:  ['a', 'an', 'ang', 'ao', 'e', 'i', 'in', 'ing', 'ong', 'ou', 'ü', 'üan', 'üe', 'ün'],
+  w:  ['a', 'ai', 'an', 'ang', 'ei', 'en', 'eng', 'o', 'u'],
+}
+
+function PinyinSquare({ syllable, selected, disabled, onClick }) {
+  if (disabled) {
+    return (
+      <div className="flex items-center justify-center border-2 rounded-xl text-sm sm:text-base md:text-lg font-bold aspect-square w-full opacity-25 bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed select-none">
+        {syllable}
+      </div>
+    )
+  }
+
   return (
     <button
       onClick={onClick}
@@ -36,6 +77,26 @@ function Pinyin() {
   const [selectedInitial, setSelectedInitial] = useState(INITIALS[0])
   const [selectedFinal, setSelectedFinal] = useState(FINALS[0])
   const [selectedTone, setSelectedTone] = useState(1)
+  const audioRef = useRef(null)
+
+  function playAudio(initial, final, tone) {
+    if (audioRef.current) audioRef.current.pause()
+    audioRef.current = new Audio(`/pinyin/${initial}${final}${tone}.mp3`)
+    audioRef.current.play().catch(() => {})
+  }
+
+  function handleInitialClick(initial) {
+    const valid = new Set(VALID_FINALS[initial] ?? FINALS)
+    let final = selectedFinal
+    if (!valid.has(final)) {
+      final = FINALS.find(f => valid.has(f)) ?? selectedFinal
+    }
+    setSelectedInitial(initial)
+    setSelectedFinal(final)
+    playAudio(initial, final, selectedTone)
+  }
+
+  const validForCurrent = new Set(VALID_FINALS[selectedInitial] ?? FINALS)
 
   return (
     <div className="py-2 space-y-4 mx-[5%] sm:mx-[8%] md:mx-[10%]">
@@ -67,7 +128,7 @@ function Pinyin() {
             {TONES.map(({ num, label }) => (
               <button
                 key={num}
-                onClick={() => setSelectedTone(num)}
+                onClick={() => { setSelectedTone(num); playAudio(selectedInitial, selectedFinal, num) }}
                 className={`flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 border-2 rounded-xl text-base sm:text-lg md:text-xl font-bold transition-colors shadow-sm
                   ${selectedTone === num
                     ? 'bg-blue-600 text-white border-blue-600'
@@ -78,7 +139,7 @@ function Pinyin() {
               </button>
             ))}
             <button
-              onClick={() => {}}
+              onClick={() => playAudio(selectedInitial, selectedFinal, selectedTone)}
               className="flex items-center justify-center w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 border-2 rounded-xl text-base sm:text-lg md:text-xl font-bold transition-colors shadow-sm bg-white text-blue-800 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600"
             >
               ▶
@@ -87,7 +148,7 @@ function Pinyin() {
         </div>
       </div>
 
-      {/* Initials grid — fewer cols on mobile = bigger squares */}
+      {/* Initials grid */}
       <section>
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">Initials</h2>
         <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-1.5 sm:gap-2">
@@ -96,7 +157,7 @@ function Pinyin() {
               key={s}
               syllable={s}
               selected={selectedInitial === s}
-              onClick={() => setSelectedInitial(s)}
+              onClick={() => handleInitialClick(s)}
             />
           ))}
         </div>
@@ -111,7 +172,8 @@ function Pinyin() {
               key={s}
               syllable={s}
               selected={selectedFinal === s}
-              onClick={() => setSelectedFinal(s)}
+              disabled={!validForCurrent.has(s)}
+              onClick={() => { setSelectedFinal(s); playAudio(selectedInitial, s, selectedTone) }}
             />
           ))}
         </div>
