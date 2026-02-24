@@ -1,12 +1,21 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { scoresAPI } from '../lib/api'
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
-export default function ScoreModal({ gameSlug, onClose }) {
+const SCORE_MODES = [
+  { label: 'Bullet',  slug: 'pinyin-mania-bullet' },
+  { label: 'Rapid',   slug: 'pinyin-mania-rapid' },
+  { label: 'Classic', slug: 'pinyin-mania-classic' },
+]
+
+export default function ScoreModal({ defaultSlug = 'pinyin-mania-rapid', onClose }) {
+  const [activeSlug, setActiveSlug] = useState(defaultSlug)
+
   const { data, isLoading } = useQuery({
-    queryKey: ['scores', gameSlug],
-    queryFn: () => scoresAPI.getLeaderboard(gameSlug).then(r => r.data),
+    queryKey: ['scores', activeSlug],
+    queryFn: () => scoresAPI.getLeaderboard(activeSlug).then(r => r.data),
     staleTime: 0,
   })
 
@@ -27,6 +36,23 @@ export default function ScoreModal({ gameSlug, onClose }) {
           >
             ✕
           </button>
+        </div>
+
+        {/* Mode tabs */}
+        <div className="flex gap-1 px-5 pt-3 pb-1">
+          {SCORE_MODES.map(m => (
+            <button
+              key={m.slug}
+              onClick={() => setActiveSlug(m.slug)}
+              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                activeSlug === m.slug
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
         </div>
 
         <div className="px-5 py-4 max-h-80 overflow-y-auto">

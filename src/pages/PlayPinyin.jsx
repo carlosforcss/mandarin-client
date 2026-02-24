@@ -4,13 +4,18 @@ import { INITIALS, TONES, VALID_FINALS, toAudioFinal, randomPinyin } from '../li
 import { scoresAPI } from '../lib/api'
 import ScoreModal from '../components/ScoreModal'
 
-const GAME_SLUG = 'pinyin-mania-60-seconds'
+const MODES = [
+  { key: 'bullet',  label: 'Bullet',  seconds: 60,  slug: 'pinyin-mania-bullet' },
+  { key: 'rapid',   label: 'Rapid',   seconds: 120, slug: 'pinyin-mania-rapid' },
+  { key: 'classic', label: 'Classic', seconds: 300, slug: 'pinyin-mania-classic' },
+]
+const DEFAULT_MODE = 'rapid'
 
 function GameSquare({ label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center justify-center border rounded-md text-xs sm:text-sm md:text-base font-semibold transition-colors cursor-pointer aspect-square w-full bg-white text-blue-800 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+      className="flex items-center justify-center border rounded-md text-sm sm:text-base md:text-lg font-semibold transition-colors cursor-pointer aspect-square w-full bg-white text-blue-800 border-blue-200 hover:bg-blue-600 hover:text-white hover:border-blue-600"
     >
       {label}
     </button>
@@ -21,8 +26,9 @@ export default function PlayPinyin() {
   const [phase, setPhase] = useState('name-entry') // 'name-entry' | 'playing' | 'game-over'
   const [showScores, setShowScores] = useState(false)
   const [name, setName] = useState('')
+  const [modeKey, setModeKey] = useState(DEFAULT_MODE)
   const [score, setScore] = useState(0)
-  const [timeLeft, setTimeLeft] = useState(30)
+  const [timeLeft, setTimeLeft] = useState(0)
   const [step, setStep] = useState('initial') // 'initial' | 'final' | 'tone'
   const [answer, setAnswer] = useState(null)
   const [selectedInitial, setSelectedInitial] = useState(null)
@@ -32,6 +38,10 @@ export default function PlayPinyin() {
   const gameOverRef = useRef(false)
   const feedbackTimeoutRef = useRef(null)
   const scoreRef = useRef(0)
+  const pendingInitialRef = useRef(null)
+  const pendingFinalRef = useRef(null)
+
+  const currentMode = MODES.find(m => m.key === modeKey)
 
   function playPinyinAudio(pinyin) {
     const audioFinal = toAudioFinal(pinyin.initial, pinyin.final)
@@ -52,7 +62,7 @@ export default function PlayPinyin() {
     scoreRef.current = 0
     setShowScores(false)
     setScore(0)
-    setTimeLeft(60)
+    setTimeLeft(currentMode.seconds)
     setPhase('playing')
     startRound(randomPinyin())
   }
@@ -65,7 +75,7 @@ export default function PlayPinyin() {
         if (t <= 1) {
           clearInterval(id)
           gameOverRef.current = true
-          scoresAPI.submit(GAME_SLUG, name, scoreRef.current)
+          scoresAPI.submit(currentMode.slug, name, scoreRef.current)
             .finally(() => setShowScores(true))
           setPhase('game-over')
           return 0
@@ -91,13 +101,9 @@ export default function PlayPinyin() {
 
   function handleFinalClick(final, initial) {
     setStep('tone')
-    // Store final in a ref so tone handler can access it
     pendingFinalRef.current = final
     pendingInitialRef.current = initial
   }
-
-  const pendingInitialRef = useRef(null)
-  const pendingFinalRef = useRef(null)
 
   function handleToneClick(tone) {
     const pickedInitial = pendingInitialRef.current
@@ -107,7 +113,7 @@ export default function PlayPinyin() {
       pickedFinal === answer.final &&
       tone === answer.tone
 
-    const delta = correct ? 5 : -2
+    const delta = correct ? 5 : -1
     setScore(s => {
       const next = Math.max(0, s + delta)
       scoreRef.current = next
@@ -128,6 +134,30 @@ export default function PlayPinyin() {
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm text-center space-y-6">
           <h1 className="text-2xl font-bold text-gray-800">🎮 Pinyin Game</h1>
           <p className="text-gray-500 text-sm">Listen to the audio and pick the correct initial, final and tone.</p>
+
+          {/* Mode selector */}
+          <div className="space-y-2 text-left">
+            <label className="text-sm font-semibold text-gray-600">Mode</label>
+            <div className="flex gap-2">
+              {MODES.map(m => (
+                <button
+                  key={m.key}
+                  onClick={() => setModeKey(m.key)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-bold border-2 transition-colors ${
+                    modeKey === m.key
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white text-gray-500 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                  }`}
+                >
+                  <div>{m.label}</div>
+                  <div className={`text-xs font-normal mt-0.5 ${modeKey === m.key ? 'text-blue-100' : 'text-gray-400'}`}>
+                    {m.seconds < 60 ? `${m.seconds}s` : `${m.seconds / 60}min`}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="space-y-2 text-left">
             <label className="text-sm font-semibold text-gray-600">Your name</label>
             <input
@@ -187,13 +217,19 @@ export default function PlayPinyin() {
           </button>
         </div>
       </div>
-      {showScores && <ScoreModal gameSlug={GAME_SLUG} onClose={() => setShowScores(false)} />}
+      {showScores && <ScoreModal defaultSlug={currentMode.slug} onClose={() => setShowScores(false)} />}
       </>
     )
   }
 
   // ── Playing ───────────────────────────────────────────────────────────────────
   const validFinals = selectedInitial ? (VALID_FINALS[selectedInitial] ?? []) : []
+
+  const minutes = Math.floor(timeLeft / 60)
+  const seconds = timeLeft % 60
+  const timerDisplay = minutes > 0
+    ? `${minutes}:${String(seconds).padStart(2, '0')}`
+    : `${timeLeft}s`
 
   return (
     <div className="py-2 space-y-4 mx-[5%] sm:mx-[8%] md:mx-[10%]">
@@ -204,7 +240,7 @@ export default function PlayPinyin() {
           Score: <span className="text-blue-600">{score}</span>
         </div>
         <div className={`text-lg font-bold tabular-nums ${timeLeft <= 10 ? 'text-red-500' : 'text-gray-600'}`}>
-          ⏱ {timeLeft}s
+          ⏱ {timerDisplay}
         </div>
       </div>
 
@@ -233,7 +269,7 @@ export default function PlayPinyin() {
               {feedback.correct ? '✓' : '✗'}
             </div>
             <div className={`text-2xl font-bold ${feedback.correct ? 'text-green-500' : 'text-red-500'}`}>
-              {feedback.delta > 0 ? '+5' : '-2'}
+              {feedback.delta > 0 ? '+5' : '-1'}
             </div>
             {!feedback.correct && (
               <div className="mt-2 text-center">
@@ -250,7 +286,7 @@ export default function PlayPinyin() {
 
         {/* Initials */}
         {step === 'initial' && (
-          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 lg:grid-cols-[16] gap-1">
+          <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-9 lg:grid-cols-12 gap-2">
             {INITIALS.map(s => (
               <GameSquare key={s} label={s} onClick={() => handleInitialClick(s)} />
             ))}
@@ -259,7 +295,7 @@ export default function PlayPinyin() {
 
         {/* Finals — only valid ones shown, invalid ones hidden */}
         {step === 'final' && (
-          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-12 lg:grid-cols-[16] gap-1">
+          <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-9 lg:grid-cols-12 gap-2">
             {validFinals.map(s => (
               <GameSquare key={s} label={s} onClick={() => handleFinalClick(s, selectedInitial)} />
             ))}

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { INITIALS, FINALS, TONES, VALID_FINALS, toAudioFinal } from '../lib/pinyin'
 import ScoreModal from '../components/ScoreModal'
 
-const GAME_SLUG = 'pinyin-mania-60-seconds'
 
 function PinyinSquare({ syllable, selected, disabled, onClick }) {
   if (disabled) {
@@ -164,7 +163,7 @@ function Pinyin() {
         </div>
       </section>
 
-      {showScores && <ScoreModal gameSlug={GAME_SLUG} onClose={() => setShowScores(false)} />}
+      {showScores && <ScoreModal onClose={() => setShowScores(false)} />}
     </div>
   )
 }
