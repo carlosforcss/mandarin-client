@@ -3,6 +3,7 @@ import Nav from './components/Nav'
 import HanziList from './pages/HanziList'
 import HanziDetail from './pages/HanziDetail'
 import Categories from './pages/Categories'
+import CollectionDetail from './pages/CollectionDetail'
 import Pinyin from './pages/Pinyin'
 import PlayPinyin from './pages/PlayPinyin'
 
@@ -16,6 +17,7 @@ function App() {
           <Route path="/hanzi" element={<HanziList />} />
           <Route path="/hanzi/:id" element={<HanziDetail />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/collection/:id" element={<CollectionDetail />} />
           <Route path="/pinyin" element={<Pinyin />} />
           <Route path="/play-pinyin" element={<PlayPinyin />} />
         </Routes>

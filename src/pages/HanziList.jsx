@@ -107,7 +107,7 @@ function HanziList() {
                 <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
                   <span>HSK {hanzi.hsk_level}</span>
                   {hanzi.category_id && (
-                    <span>Category ID: {hanzi.category_id}</span>
+                    <span>Collection ID: {hanzi.category_id}</span>
                   )}
                 </div>
 

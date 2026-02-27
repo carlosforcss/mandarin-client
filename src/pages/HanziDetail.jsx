@@ -118,7 +118,7 @@ function HanziDetail() {
           
           {hanzi.category_id && (
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm font-medium text-gray-600 mb-1">Category ID</div>
+              <div className="text-sm font-medium text-gray-600 mb-1">Collection ID</div>
               <div className="text-lg font-semibold">{hanzi.category_id}</div>
             </div>
           )}

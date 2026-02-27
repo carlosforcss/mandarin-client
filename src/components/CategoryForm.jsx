@@ -30,13 +30,13 @@ function CategoryForm({ category, onSubmit, onCancel, isLoading }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       <h3 className="text-lg font-semibold mb-4">
-        {category ? 'Edit Category' : 'Create New Category'}
+        {category ? 'Edit Collection' : 'Create New Collection'}
       </h3>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category Name *
+            Collection Name *
           </label>
           <input
             type="text"
@@ -44,7 +44,7 @@ function CategoryForm({ category, onSubmit, onCancel, isLoading }) {
             onChange={(e) => handleChange('name', e.target.value)}
             required
             className="w-full border border-gray-300 rounded-md px-3 py-2"
-            placeholder="Enter category name"
+            placeholder="Enter collection name"
           />
         </div>
 

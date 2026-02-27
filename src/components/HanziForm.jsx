@@ -112,14 +112,14 @@ function HanziForm({ hanzi, onSubmit, onCancel, isLoading }) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category
+            Collection
           </label>
           <select
             value={formData.category_id || ''}
             onChange={(e) => handleChange('category_id', e.target.value ? parseInt(e.target.value) : null)}
             className="w-full border border-gray-300 rounded-md px-3 py-2"
           >
-            <option value="">No Category</option>
+            <option value="">No Collection</option>
             {categories.map(category => (
               <option key={category.id} value={category.id}>
                 {category.name}
