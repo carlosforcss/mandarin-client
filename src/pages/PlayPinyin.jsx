@@ -33,6 +33,7 @@ export default function PlayPinyin() {
   const [answer, setAnswer] = useState(null)
   const [selectedInitial, setSelectedInitial] = useState(null)
   const [feedback, setFeedback] = useState(null) // { correct, delta }
+  const [history, setHistory] = useState([]) // { answer, picked, correct }
 
   const audioRef = useRef(null)
   const gameOverRef = useRef(false)
@@ -62,6 +63,7 @@ export default function PlayPinyin() {
     scoreRef.current = 0
     setShowScores(false)
     setScore(0)
+    setHistory([])
     setTimeLeft(currentMode.seconds)
     setPhase('playing')
     startRound(randomPinyin())
@@ -119,6 +121,7 @@ export default function PlayPinyin() {
       scoreRef.current = next
       return next
     })
+    setHistory(h => [...h, { answer, picked: { initial: pickedInitial, final: pickedFinal, tone }, correct }])
     setFeedback({ correct, delta, answer })
 
     feedbackTimeoutRef.current = setTimeout(() => {
@@ -184,9 +187,19 @@ export default function PlayPinyin() {
 
   // ── Game over ─────────────────────────────────────────────────────────────────
   if (phase === 'game-over') {
+    const correctAnswers = history.filter(h => h.correct)
+    const wrongAnswers = history.filter(h => !h.correct)
+
+    const formatPinyin = ({ initial, final, tone }) => {
+      const toneLabel = TONES.find(t => t.num === tone)?.label ?? ''
+      return `${initial}${final} ${toneLabel}`
+    }
+
     return (
       <>
-      <div className="flex items-center justify-center min-h-[70vh]">
+      <div className="flex flex-col items-center py-6 px-4 space-y-6">
+
+        {/* Score card */}
         <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm text-center space-y-6">
           <div className="text-5xl">🎉</div>
           <h1 className="text-2xl font-bold text-gray-800">Time's up, {name}!</h1>
@@ -215,6 +228,54 @@ export default function PlayPinyin() {
           >
             🏆 View Scores
           </button>
+        </div>
+
+        {/* Results */}
+        <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          {/* Correct */}
+          <div className="bg-white rounded-2xl shadow-lg p-5">
+            <h2 className="text-sm font-bold text-green-600 uppercase tracking-widest mb-3">
+              ✓ Correct ({correctAnswers.length})
+            </h2>
+            {correctAnswers.length === 0 ? (
+              <p className="text-sm text-gray-400">None</p>
+            ) : (
+              <ul className="space-y-1">
+                {correctAnswers.map((h, i) => (
+                  <li key={i} className="text-sm font-semibold text-gray-700">
+                    {formatPinyin(h.answer)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Wrong */}
+          <div className="bg-white rounded-2xl shadow-lg p-5">
+            <h2 className="text-sm font-bold text-red-500 uppercase tracking-widest mb-3">
+              ✗ Wrong ({wrongAnswers.length})
+            </h2>
+            {wrongAnswers.length === 0 ? (
+              <p className="text-sm text-gray-400">None</p>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {wrongAnswers.map((h, i) => (
+                  <li key={i} className="py-2 text-sm">
+                    <div className="flex items-center gap-1.5 text-red-400">
+                      <button onClick={() => playPinyinAudio(h.picked)} className="text-xs opacity-60 hover:opacity-100 transition-opacity">🔊</button>
+                      You: {formatPinyin(h.picked)}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-green-600 font-semibold">
+                      <button onClick={() => playPinyinAudio(h.answer)} className="text-xs opacity-60 hover:opacity-100 transition-opacity">🔊</button>
+                      Correct: {formatPinyin(h.answer)}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
         </div>
       </div>
       {showScores && <ScoreModal defaultSlug={currentMode.slug} onClose={() => setShowScores(false)} />}
