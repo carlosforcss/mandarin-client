@@ -9,53 +9,21 @@ const api = axios.create({
   },
 })
 
-// Hanzi endpoints
 export const hanziAPI = {
-  getAll: (skip = 0, limit = 100) => api.get(`/api/hanzi/?skip=${skip}&limit=${limit}`),
-  getById: (id) => api.get(`/api/hanzi/${id}`),
-  getByHSK: (hsk_level, skip = 0, limit = 100) => api.get(`/api/hanzi/hsk/${hsk_level}?skip=${skip}&limit=${limit}`),
   getByCategory: (category_id, hsk_level = null, skip = 0, limit = 100) => {
     const params = new URLSearchParams({ skip: skip.toString(), limit: limit.toString() })
     if (hsk_level) params.append('hsk_level', hsk_level.toString())
     return api.get(`/api/hanzi/category/${category_id}?${params}`)
   },
-  create: (data) => api.post('/api/hanzi/', data),
-  update: (id, data) => api.put(`/api/hanzi/${id}`, data),
-  delete: (id) => api.delete(`/api/hanzi/${id}`),
   getSpeech: (id) => api.get(`/api/hanzi/${id}/speech`, { responseType: 'blob' }),
 }
 
-
-// Categories endpoints
 export const categoriesAPI = {
   getAll: (skip = 0, limit = 100) => api.get(`/api/categories/?skip=${skip}&limit=${limit}`),
   getById: (id) => api.get(`/api/categories/${id}`),
-  getByHSK: (hsk_level) => api.get(`/api/categories/hsk/${hsk_level}`),
-  create: (data) => api.post('/api/categories/', data),
-  update: (id, data) => api.put(`/api/categories/${id}`, data),
-  delete: (id) => api.delete(`/api/categories/${id}`),
 }
 
-// Files endpoints
-export const filesAPI = {
-  upload: (file) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return api.post('/api/files/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-  },
-  getById: (id) => api.get(`/api/files/${id}`),
-  getContent: (id) => api.get(`/api/files/${id}/content`),
-  delete: (id) => api.delete(`/api/files/${id}`),
-}
-
-// Scores / leaderboard endpoints
 export const scoresAPI = {
   submit: (game_slug, player, score) => api.post('/api/scores/', { game_slug, player, score }),
   getLeaderboard: (game_slug) => api.get(`/api/scores/${game_slug}`),
 }
-
-export default api
